@@ -1,0 +1,7 @@
+# 千祈唔好將憑證 commit 上 GitHub
+params.env
+*.pem
+*.key
+*.crt
+config.json
+*.bak
