@@ -115,13 +115,26 @@ cat ~/.ssh/oracle_vpn.pub
 |---|---|
 | **Name** | 隨便，例如 `proxy` |
 | **Image** | 撳 `Change image` → **Canonical Ubuntu 24.04**（唔好用 Oracle Linux，麻煩好多） |
-| **Shape** | 撳 `Change shape` → `Ampere` → **`VM.Standard.A1.Flex`** → OCPU 揀 **4**、Memory 揀 **24 GB** |
+| **Shape** | 撳 `Change shape` → `Ampere` → **`VM.Standard.A1.Flex`**（要見到 `Always Free-eligible` 標籤）→ **預設 1 核 / 6 GB 就得，唔使改** |
 | **Primary VNIC / Subnet** | 用預設嘅 VCN 就得（冇 VCN 會自動幫你整） |
 | **Public IPv4 address** | ✅ **一定要 `Assign a public IPv4 address`** |
 | **Add SSH keys** | 揀 `Paste public keys`，貼低 Step 2 複製嗰串 |
 | **Boot volume** | 預設 50GB 就夠（Always Free 總共 200GB） |
 
 撳 `Create`。
+
+> **💡 唔好貪心拉去 4 核 / 24GB。**
+>
+> `A1.Flex` 個 "Flex" 係彈性嘅意思，揀完 shape 之後下面會有 OCPU / Memory 調整欄，最大可以拉到 4 核 / 24GB（Always Free 總額度）。**但唔好郁佢** ——
+>
+> 1. 跑代理 **1 核 / 6GB 有凸**（sing-box 閒時食唔到 50MB RAM，CPU 幾乎唔郁），24GB 對呢個用途冇任何分別
+> 2. **細規格開得到嘅機會高好多** — 你最大嘅敵人係下面嗰個 "Out of host capacity"，4 核 24GB 係最搶手嘅配置
+>
+> 首要目標係**先開到部機**。之後想加隨時停機改得返。
+
+> **📱 用緊手機做？** Oracle console 喺手機上排版好易爛，特別容易 scroll 過咗頭漏咗 **`Assign a public IPv4 address`** —— 漏咗就冇公網 IP，成件事做唔到。有電腦嘅話強烈建議轉電腦。
+>
+> 真係要喺手機做，SSH key 嗰步可以揀 **`Generate a key pair for me`** → 撳 **`Save private key`** 下載，唔使自己 `ssh-keygen`（但個私鑰檔之後要傳去你平時用嘅電腦）。
 
 ### 🔴 遇到 "Out of host capacity" 點算
 
@@ -142,7 +155,7 @@ cat ~/.ssh/oracle_vpn.pub
 
 **② 降低規格再試**
 
-4 核 / 24GB 唔得，試 **2 核 / 12GB**，甚至 **1 核 / 6GB**。跑代理其實 1 核 6GB 已經非常夠用（sing-box 食唔到 50MB RAM）。
+如果你郁咗個 OCPU / Memory，調返落去。**1 核 / 6GB** 開得到嘅機會比 4 核 / 24GB 高好多，而跑代理其實 1 核 6GB 已經非常夠用。
 
 **③ 改開 AMD 免費機**
 
