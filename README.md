@@ -116,8 +116,8 @@ cat ~/.ssh/oracle_vpn.pub
 | **Name** | 隨便，例如 `proxy` |
 | **Image** | 撳 `Change image` → **Canonical Ubuntu 24.04**（唔好用 Oracle Linux，麻煩好多） |
 | **Shape** | 撳 `Change shape` → `Ampere` → **`VM.Standard.A1.Flex`**（要見到 `Always Free-eligible` 標籤）→ **預設 1 核 / 6 GB 就得，唔使改** |
-| **Primary VNIC / Subnet** | 用預設嘅 VCN 就得（冇 VCN 會自動幫你整） |
-| **Public IPv4 address** | ✅ **一定要 `Assign a public IPv4 address`** |
+| **Primary network / Subnet** | ⚠️ Subnet 一定要揀 **public subnet**（見下面） |
+| **Public IPv4 address** | ✅ **一定要開 `Automatically assign public IPv4 address`** |
 | **Add SSH keys** | 揀 `Paste public keys`，貼低 Step 2 複製嗰串 |
 | **Boot volume** | 預設 50GB 就夠（Always Free 總共 200GB） |
 
@@ -132,7 +132,20 @@ cat ~/.ssh/oracle_vpn.pub
 >
 > 首要目標係**先開到部機**。之後想加隨時停機改得返。
 
-> **📱 用緊手機做？** Oracle console 喺手機上排版好易爛，特別容易 scroll 過咗頭漏咗 **`Assign a public IPv4 address`** —— 漏咗就冇公網 IP，成件事做唔到。有電腦嘅話強烈建議轉電腦。
+> **🔴 `Automatically assign public IPv4 address` 個掣係灰色㩒唔到？**
+>
+> 你會見到下面有個黃色警告：*"You must select a public subnet to assign a public IPv4 address"*。
+>
+> **原因：你揀咗 private subnet（私有子網）。** 私有子網冇 internet gateway，所以連分配公網 IP 嘅選項都會被禁用。
+>
+> 喺同一個 Networking 步驟向上 scroll 搵 `Subnet`：
+> - 有得揀現有 subnet → 揀 **`public subnet-vcn-xxxxx`**（唔好揀 `private subnet-...`）
+> - 係 `Create new subnet` → `Subnet type` 揀 **`Public subnet`**
+> - 得一個 private subnet 揀 → 喺 `Primary network` 改揀 **`Create new virtual cloud network`**，精靈會自動整個帶 internet gateway 同 public subnet 嘅 VCN
+>
+> 改完個掣就會著返，**記得撳開佢**。
+
+> **📱 用緊手機做？** Oracle console 喺手機上排版好易爛（成幅右邊會俾切走），特別容易漏咗公網 IP 呢一步 —— 漏咗就成件事做唔到。**打橫拎部機**會好啲，但有電腦嘅話強烈建議轉電腦：後面仲有 Security List 加防火牆規則同 SSH，喺手機上會更折騰。
 >
 > 真係要喺手機做，SSH key 嗰步可以揀 **`Generate a key pair for me`** → 撳 **`Save private key`** 下載，唔使自己 `ssh-keygen`（但個私鑰檔之後要傳去你平時用嘅電腦）。
 
