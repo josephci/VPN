@@ -85,23 +85,50 @@
 
 ## Step 2: 生成 SSH key
 
-喺你自己部電腦（澳門嗰部，唔係雲上面）行：
+### 先搞清楚 SSH key 係乜
+
+SSH key 係**一對**嘢：
+
+| | 係乜 | 放邊 |
+|---|---|---|
+| **公鑰** `xxx.pub` | 一把**鎖** | 貼上 Oracle，裝喺部伺服器度 |
+| **私鑰**（冇 `.pub` 嗰個）| 開嗰把鎖嘅**鎖匙** | 留喺你手上，**唔好俾任何人** |
+
+開機嗰陣貼公鑰上去 = 幫部機裝把鎖。之後用私鑰開門入去，唔使打密碼（比密碼安全好多）。**私鑰唔見咗就入唔到部機**，記得備份。
+
+揀一條路做：
+
+### 路線 A：用電腦（最方便）
+
+Mac 開 `Terminal`，Windows 開 `PowerShell`：
 
 ```bash
-ssh-keygen -t ed25519 -C "oracle-vpn" -f ~/.ssh/oracle_vpn
-```
-
-一路撳 Enter（passphrase 可以留空）。完成之後：
-
-```bash
+ssh-keygen -t ed25519 -C "oracle-vpn" -f ~/.ssh/oracle_vpn -N ""
 cat ~/.ssh/oracle_vpn.pub
 ```
 
-**複製呢串嘢**（`ssh-ed25519 AAAA... oracle-vpn`），Step 3 要用。
+> `-N ""` = 唔設密碼短語，慳返之後每次打字。
+> Windows 10 之後內置 OpenSSH，唔使另外裝嘢。
 
-> Windows 用戶：喺 PowerShell 行同樣嘅指令就得，Windows 10 之後內置 OpenSSH。
+**複製 `cat` 出嗰成行**（`ssh-ed25519 AAAA... oracle-vpn`），Step 3 要用。
 
-⚠️ `~/.ssh/oracle_vpn`（冇 `.pub` 嗰個）係私鑰，**唔好俾任何人**。整份 backup 收好，唔見咗就入唔到部機。
+### 路線 B：淨係有手機 → 用 Oracle Cloud Shell
+
+Oracle console 內置咗一個**瀏覽器版 Linux 終端機**，免費、已經登入好、有 5GB 永久儲存。用佢就**唔使裝任何 app、唔使搬檔案** —— 鎖匙由頭到尾留喺 Cloud Shell 入面，之後亦都係喺度 SSH 入部機。
+
+1. Console 頂部（右上角區域）撳 **`>_`** 圖示，畫面下方彈出終端機，等 10–30 秒開機
+2. 打呢兩行：
+
+```bash
+ssh-keygen -t ed25519 -C "oracle-vpn" -f ~/.ssh/oracle_vpn -N ""
+cat ~/.ssh/oracle_vpn.pub
+```
+
+3. 長按選取，**複製 `ssh-ed25519` 開頭嗰成行**
+
+> 📱 手機用 Cloud Shell 打橫拎會好用好多。
+
+> ⚠️ 開機嗰陣**唔好揀 `Generate a key pair for me`** —— 咁會下載個私鑰檔落手機，之後你要諗點將佢搬入 Cloud Shell，白白多一重功夫。統一用 `Paste public keys`。
 
 ---
 
@@ -168,7 +195,7 @@ cat ~/.ssh/oracle_vpn.pub
 
 > **📱 用緊手機做？** Oracle console 喺手機上排版好易爛（成幅右邊會俾切走），特別容易漏咗公網 IP 呢一步 —— 漏咗就成件事做唔到。**打橫拎部機**會好啲，但有電腦嘅話強烈建議轉電腦：後面仲有 Security List 加防火牆規則同 SSH，喺手機上會更折騰。
 >
-> 真係要喺手機做，SSH key 嗰步可以揀 **`Generate a key pair for me`** → 撳 **`Save private key`** 下載，唔使自己 `ssh-keygen`（但個私鑰檔之後要傳去你平時用嘅電腦）。
+> 真係要喺手機做，SSH 嗰部分行 [Step 2 路線 B（Cloud Shell）](#路線-b淨係有手機--用-oracle-cloud-shell)，唔使裝 app 又唔使搬檔案。
 
 ### 🔴 遇到 "Out of host capacity" 點算
 
@@ -251,13 +278,21 @@ Destination Port Range: 8443
 
 ## Step 5: SSH 入去跑部署腳本
 
-喺你自己部電腦：
+**喺你 [Step 2](#step-2-生成-ssh-key) 生成鎖匙嘅同一個地方**（電腦嘅終端機，或者 Oracle Cloud Shell）行：
 
 ```bash
 ssh -i ~/.ssh/oracle_vpn ubuntu@你嘅公網IP
 ```
 
-> 用 Ubuntu image 嘅話用戶名係 `ubuntu`。如果話 `Permission denied`，行 `chmod 600 ~/.ssh/oracle_vpn` 再試。
+第一次會問 `Are you sure you want to continue connecting?` → 打 **`yes`** → Enter。
+
+見到提示符變成 `ubuntu@xxx:~$` 就係入咗。
+
+> **用戶名一定係 `ubuntu`**（因為揀咗 Ubuntu image），唔係 `root` 亦唔係 `opc`。
+>
+> `Permission denied (publickey)` → Mac/Linux 行 `chmod 600 ~/.ssh/oracle_vpn` 再試。
+>
+> 連線 timeout 而 IP 又冇打錯 → 查 Security List 有冇開 TCP 22（VCN Wizard 整嘅預設已經開咗）。
 
 入到去之後：
 
