@@ -107,7 +107,27 @@ cat ~/.ssh/oracle_vpn.pub
 
 ## Step 3: 開實例（最難嗰步）
 
-登入 https://cloud.oracle.com → 左上角漢堡選單 → `Compute` → `Instances` → **`Create instance`**
+### 3a. 先獨立整個 VCN（唔好喺開機精靈度順手整）
+
+> **⚠️ 呢步睇落多餘，但唔做嘅話你大機率會卡喺「公網 IP 個掣係灰色」。**
+>
+> 開機精靈入面順手整嘅 VCN **唔會幫你整 Internet Gateway**。冇 IGW，就算你揀咗 "Create new public subnet"，`Automatically assign public IPv4 address` 都會一直禁用 —— 因為「public subnet」個名唔重要，真正令佢 public 嘅係 **IGW + route rule**。
+
+登入 https://cloud.oracle.com
+
+1. 左上角漢堡選單 → `Networking` → `Virtual Cloud Networks`
+2. 撳 **`Start VCN Wizard`**
+3. 揀 **`Create VCN with Internet Connectivity`** ← **關鍵，唔好揀另一個**
+4. `VCN Name` 填 `vcn-proxy`，其他全部用預設
+5. `Next` → `Create`，等佢跑完（約 30 秒，全部綠色剔）
+
+精靈會一次過整好：**Internet Gateway**、**Public Subnet + 正確 route table**（`0.0.0.0/0` → IGW）、NAT Gateway、Default Security List。
+
+> 💡 順帶好處：[Step 4](#step-4-開防火牆兩層都要開) 要加防火牆規則就係入呢個 VCN 嘅 Security List，而家整好咗，到時直接搵得返。
+
+### 3b. 開實例
+
+漢堡選單 → `Compute` → `Instances` → **`Create instance`**
 
 ### 設定
 
@@ -116,7 +136,8 @@ cat ~/.ssh/oracle_vpn.pub
 | **Name** | 隨便，例如 `proxy` |
 | **Image** | 撳 `Change image` → **Canonical Ubuntu 24.04**（唔好用 Oracle Linux，麻煩好多） |
 | **Shape** | 撳 `Change shape` → `Ampere` → **`VM.Standard.A1.Flex`**（要見到 `Always Free-eligible` 標籤）→ **預設 1 核 / 6 GB 就得，唔使改** |
-| **Primary network / Subnet** | ⚠️ Subnet 一定要揀 **public subnet**（見下面） |
+| **Primary network** | 揀 `Select existing virtual cloud network` → **`vcn-proxy`**（3a 整嗰個） |
+| **Subnet** | 揀 `Select existing subnet` → **`Public Subnet-vcn-proxy`**（一定要 **Public** 開頭嗰個） |
 | **Public IPv4 address** | ✅ **一定要開 `Automatically assign public IPv4 address`** |
 | **Add SSH keys** | 揀 `Paste public keys`，貼低 Step 2 複製嗰串 |
 | **Boot volume** | 預設 50GB 就夠（Always Free 總共 200GB） |
@@ -134,14 +155,14 @@ cat ~/.ssh/oracle_vpn.pub
 
 > **🔴 `Automatically assign public IPv4 address` 個掣係灰色㩒唔到？**
 >
-> 你會見到下面有個黃色警告：*"You must select a public subnet to assign a public IPv4 address"*。
+> 通常下面仲會有個黃色警告：*"You must select a public subnet to assign a public IPv4 address"*。
 >
-> **原因：你揀咗 private subnet（私有子網）。** 私有子網冇 internet gateway，所以連分配公網 IP 嘅選項都會被禁用。
+> 兩個原因，逐個排除：
 >
-> 喺同一個 Networking 步驟向上 scroll 搵 `Subnet`：
-> - 有得揀現有 subnet → 揀 **`public subnet-vcn-xxxxx`**（唔好揀 `private subnet-...`）
-> - 係 `Create new subnet` → `Subnet type` 揀 **`Public subnet`**
-> - 得一個 private subnet 揀 → 喺 `Primary network` 改揀 **`Create new virtual cloud network`**，精靈會自動整個帶 internet gateway 同 public subnet 嘅 VCN
+> **① 揀咗 private subnet** — 向上 scroll 搵 `Subnet`，揀 **`Public Subnet-...`**，唔好揀 `Private Subnet-...`。
+>
+> **② 揀咗 public subnet 但個掣照樣灰** — 即係**你個 VCN 冇 Internet Gateway**。喺開機精靈度即場整嘅 VCN 就係咁。
+> 解決方法：返去做 [Step 3a](#3a-先獨立整個-vcn唔好喺開機精靈度順手整) 用 **VCN Wizard** 整個帶 Internet Connectivity 嘅 VCN，然後喺開機精靈揀 `Select existing subnet`。
 >
 > 改完個掣就會著返，**記得撳開佢**。
 
