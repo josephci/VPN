@@ -98,9 +98,7 @@ SSH key 係**一對**嘢：
 
 揀一條路做：
 
-### 路線 A：用電腦（最方便）
-
-Mac 開 `Terminal`，Windows 開 `PowerShell`：
+### 路線 A1：Mac / Linux（或者 Windows 上嘅 Git Bash、WSL）
 
 ```bash
 ssh-keygen -t ed25519 -C "oracle-vpn" -f ~/.ssh/oracle_vpn -N ""
@@ -108,9 +106,31 @@ cat ~/.ssh/oracle_vpn.pub
 ```
 
 > `-N ""` = 唔設密碼短語，慳返之後每次打字。
-> Windows 10 之後內置 OpenSSH，唔使另外裝嘢。
 
 **複製 `cat` 出嗰成行**（`ssh-ed25519 AAAA... oracle-vpn`），Step 3 要用。
+
+### 路線 A2：Windows PowerShell
+
+⚠️ 上面嗰兩行喺 PowerShell **行唔到**，有兩個坑：`~` 唔會展開（PowerShell 唔會幫原生程式展開），而 `-N ""` 嘅空字串會被吞咗。改用：
+
+```powershell
+mkdir "$env:USERPROFILE\.ssh" -Force
+ssh-keygen -t ed25519 -C "oracle-vpn" -f "$env:USERPROFILE\.ssh\oracle_vpn"
+```
+
+**會問兩次 passphrase → 兩次都直接撳 Enter**（等同 `-N ""`）。然後：
+
+```powershell
+Get-Content "$env:USERPROFILE\.ssh\oracle_vpn.pub"
+```
+
+**如果話搵唔到 `ssh-keygen`** — 即係未裝 OpenSSH。用系統管理員身分開 PowerShell：
+
+```powershell
+Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+```
+
+或者 `設定` → `應用程式` → `選用功能` → `新增功能` → **OpenSSH 用戶端**。裝完要**關咗個視窗再開過**先生效。
 
 ### 路線 B：淨係有手機 → 用 Oracle Cloud Shell
 
@@ -280,8 +300,16 @@ Destination Port Range: 8443
 
 **喺你 [Step 2](#step-2-生成-ssh-key) 生成鎖匙嘅同一個地方**（電腦嘅終端機，或者 Oracle Cloud Shell）行：
 
+**Mac / Linux / Git Bash / Cloud Shell：**
+
 ```bash
 ssh -i ~/.ssh/oracle_vpn ubuntu@你嘅公網IP
+```
+
+**Windows PowerShell：**
+
+```powershell
+ssh -i "$env:USERPROFILE\.ssh\oracle_vpn" ubuntu@你嘅公網IP
 ```
 
 第一次會問 `Are you sure you want to continue connecting?` → 打 **`yes`** → Enter。
@@ -290,9 +318,15 @@ ssh -i ~/.ssh/oracle_vpn ubuntu@你嘅公網IP
 
 > **用戶名一定係 `ubuntu`**（因為揀咗 Ubuntu image），唔係 `root` 亦唔係 `opc`。
 >
-> `Permission denied (publickey)` → Mac/Linux 行 `chmod 600 ~/.ssh/oracle_vpn` 再試。
+> **`Permission denied (publickey)`**
+> Mac/Linux：`chmod 600 ~/.ssh/oracle_vpn`
 >
-> 連線 timeout 而 IP 又冇打錯 → 查 Security List 有冇開 TCP 22（VCN Wizard 整嘅預設已經開咗）。
+> **`UNPROTECTED PRIVATE KEY FILE`（Windows）** — Windows 版嘅 `chmod 600`：
+> ```powershell
+> icacls "$env:USERPROFILE\.ssh\oracle_vpn" /inheritance:r /grant:r "$($env:USERNAME):(R)"
+> ```
+>
+> **連線 timeout** 而 IP 又冇打錯 → 查 Security List 有冇開 TCP 22（VCN Wizard 整嘅預設已經開咗）。
 
 入到去之後：
 
