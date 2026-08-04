@@ -13,7 +13,15 @@ set -uo pipefail
 CONF=/etc/sing-box/config.json
 TMP=$(mktemp -d)
 SOCKS_PORT=11080
-trap 'kill ${CPID:-0} 2>/dev/null; rm -rf "$TMP"' EXIT
+DEBUG=0
+[[ "${1:-}" == "--debug" ]] && DEBUG=1
+
+restore_log() {
+  [[ ${LEVEL_CHANGED:-0} -eq 1 ]] || return 0
+  sed -i "s/\"level\": \"debug\"/\"level\": \"$OLD_LEVEL\"/" "$CONF"
+  systemctl restart sing-box 2>/dev/null || true
+}
+trap 'kill ${CPID:-0} 2>/dev/null; restore_log; rm -rf "$TMP"' EXIT
 
 RED=$'\e[31m'; GRN=$'\e[32m'; YEL=$'\e[33m'; CYA=$'\e[36m'; BLD=$'\e[1m'; RST=$'\e[0m'
 
@@ -24,6 +32,37 @@ SB=$(command -v sing-box || echo /usr/local/bin/sing-box)
 
 echo "${BLD}REALITY loopback 自測${RST}"
 echo
+
+# ── 環境快照：呢啲直接決定 REALITY 握手成唔成
+echo "${CYA}── 伺服器環境${RST}"
+DNSBLK=$(python3 -c 'import json,sys;c=json.load(open(sys.argv[1]));print(json.dumps(c.get("dns","（冇 dns 設定）"),ensure_ascii=False))' "$CONF" 2>/dev/null)
+echo "  dns 設定 : $DNSBLK"
+HS=$(python3 -c 'import json,sys
+c=json.load(open(sys.argv[1]))
+i=next(x for x in c["inbounds"] if x.get("type")=="vless")
+h=i["tls"]["reality"]["handshake"]
+print(h["server"], h["server_port"])' "$CONF" 2>/dev/null)
+HS_HOST=${HS%% *}; HS_PORT=${HS##* }
+echo "  握手目標 : ${HS_HOST}:${HS_PORT}"
+printf "  IPv4 撥號: "; if curl -4 -sI --max-time 8 "https://${HS_HOST}" -o /dev/null 2>/dev/null; then
+  echo "${GRN}通${RST}"; else echo "${RED}唔通${RST}  ← REALITY 一定死"; fi
+printf "  IPv6 撥號: "; if curl -6 -sI --max-time 8 "https://${HS_HOST}" -o /dev/null 2>/dev/null; then
+  echo "${GRN}通${RST}"; else echo "${YEL}唔通（Oracle 預設冇 IPv6，正常）${RST}"; fi
+echo
+
+# ── --debug：臨時將伺服器 log 調到 debug
+if [[ $DEBUG -eq 1 ]]; then
+  OLD_LEVEL=$(python3 -c "import json;print(json.load(open('$CONF')).get('log',{}).get('level','warn'))" 2>/dev/null || echo warn)
+  if [[ "$OLD_LEVEL" != "debug" ]]; then
+    sed -i "s/\"level\": \"$OLD_LEVEL\"/\"level\": \"debug\"/" "$CONF"
+    LEVEL_CHANGED=1
+    systemctl restart sing-box
+    sleep 2
+    echo "${CYA}已臨時將伺服器 log 調到 debug（測完自動復原）${RST}"
+    echo
+  fi
+fi
+SINCE=$(date '+%Y-%m-%d %H:%M:%S')
 
 # ── 由 config.json 抽出真實參數（同 verify-reality.sh 同一套推導）
 read -r UUID FLOW SNI SID PORT PUB <<<"$(python3 - "$CONF" <<'PY'
@@ -138,14 +177,15 @@ if [[ $OK -eq 1 ]]; then
   echo "  2. 客戶端撳緊舊節點 — 刪曬所有節點再重新匯入"
   echo "  3. v2rayN 核心係 v2fly 而唔係 Xray — v2fly 唔支援 REALITY"
   echo "  4. 中途網絡干擾 — 試下 Hysteria2 節點（走 UDP，完全唔同機制）"
-elif grep -qiE 'reality|handshake|authentication|invalid' "$TMP/client.log"; then
-  echo "${RED}${BLD}══ REALITY 握手／認證失敗（伺服器側）══${RST}"
-  echo "唔使再喺客戶端度搞 —— 連自己都認證唔到自己。"
-  echo "先行 ${CYA}sudo bash scripts/verify-reality.sh --fix${RST}，再 ${CYA}sudo systemctl restart sing-box${RST}"
+elif grep -q 'ERROR' "$TMP/client.log" || ! grep -q 'outbound/vless' "$TMP/client.log"; then
+  echo "${RED}${BLD}══ REALITY 握手失敗（伺服器側）══${RST}"
+  echo "連自己都連唔到自己 —— 唔使再喺客戶端或者網絡度搞。"
+  echo
+  echo "${BLD}伺服器側 log（呢個先係關鍵）：${RST}"
   echo "────────────────────────────────────────"
-  tail -25 "$TMP/client.log" | sed 's/^/  /'
+  journalctl -u sing-box --since "$SINCE" --no-pager 2>/dev/null | tail -40 | sed 's/^/  /'
   echo "────────────────────────────────────────"
-  journalctl -u sing-box -n 15 --no-pager 2>/dev/null | sed 's/^/  /'
+  [[ $DEBUG -eq 0 ]] && echo "${YEL}想睇更detail：${CYA}sudo bash $0 --debug${RST}"
 else
   echo "${YEL}${BLD}══ 隧道通到，但伺服器出唔到外網 ══${RST}"
   echo "log 見到 ${BLD}outbound/vless${RST} 成功建立，即係 REALITY 握手同認證${GRN}冇問題${RST}；"
