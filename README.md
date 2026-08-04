@@ -219,11 +219,32 @@ cat ~/.ssh/oracle_vpn.pub
 
 ### 🔴 遇到 "Out of host capacity" 點算
 
-呢個係甲骨文最出名嘅問題，ARM 機喺熱門 region 長期缺貨。三個解決方法，由好到差：
+```
+Out of capacity for shape VM.Standard.A1.Flex in availability domain AD-1.
+Create the instance in a different availability domain or try again later.
+```
 
-**① 升級做 Pay As You Go（最有效，強烈推薦）**
+呢個係甲骨文最出名嘅問題，ARM 機長期缺貨。
 
-聽落嚇人，但**唔會扣你錢**：
+> ⚠️ 訊息叫你「換 availability domain」—— **喺東京同大阪冇用**，呢兩個 region 都係單 AD，得 AD-1 一個。呢句提示係寫俾多 AD region（例如美國 Ashburn）嘅用戶。
+
+**① 改開 AMD 免費機（最快，想即刻用得到就揀呢個）**
+
+Shape → **`AMD`** 分頁 → **`VM.Standard.E2.1.Micro`**
+
+| | |
+|---|---|
+| 規格 | 1/8 OCPU、**1 GB RAM**、480 Mbps 網絡 |
+| Always Free | ✅ 可以開 **2 部** |
+| 供應 | **幾乎一定開到** |
+
+**1GB RAM 跑代理綽綽有餘**（sing-box 閒時食唔到 50MB，CPU 幾乎唔郁），日常瀏覽睇片同 ARM 機分別好細。
+
+其他設定完全唔使變。`deploy.sh` **會自動偵測 CPU 架構**（x86_64 / ARM 都支援），唔使改任何嘢。
+
+**② 升級做 Pay As You Go（想要 ARM 就要做呢步）**
+
+Free tier 帳號喺 A1 嘅排隊優先級係最低嗰級。聽落嚇人，但**唔會扣你錢**：
 
 > `Billing & Cost Management` → `Upgrade and Payment Method` → `Upgrade to Pay As You Go`
 
@@ -234,21 +255,17 @@ cat ~/.ssh/oracle_vpn.pub
 
 ⚠️ 記得之後唔好手多開咗收費規格嘅機。想穩陣可以去 `Billing` → `Budgets` 設個 US$1 預算警報。
 
-**② 降低規格再試**
+**③ 降低規格再試**
 
-如果你郁咗個 OCPU / Memory，調返落去。**1 核 / 6GB** 開得到嘅機會比 4 核 / 24GB 高好多，而跑代理其實 1 核 6GB 已經非常夠用。
+如果你郁咗個 OCPU / Memory，調返落 **1 核 / 6GB** —— 開得到嘅機會比 4 核 / 24GB 高好多。
 
-**③ 改開 AMD 免費機**
+**④ 揀時間重試**
 
-Shape 揀 **`VM.Standard.E2.1.Micro`**（1/8 OCPU、1GB RAM），Always Free 可以開 **2 部**。
+A1 容量係浮動嘅，有人放機就有得開。**日本時間清晨（約 5–8am，香港時間 4–7am）成功率明顯高啲。**
 
-規格細好多，但**跑代理完全夠**。呢款幾乎一定開到。如果你只係想快啲用到，直接開呢個。
+另外如果你喺 `Advanced options` 手動揀過 **Fault Domain**，改返做預設（唔指定），咁 Oracle 先可以喺任何 FD 搵位。
 
-**④ 換 Availability Domain**
-
-如果你個 region 有 AD-1 / AD-2 / AD-3，逐個試。
-
-> 唔好用第三方「自動搶機腳本」— 好多會叫你交 API 私鑰，等於將成個帳號交出去。寧願升 PAYG。
+> ⚠️ 唔好用第三方「自動搶機腳本」— 大部分要你上傳 OCI API 私鑰，等於將成個帳號交出去。寧願升 PAYG。
 
 ### 開好之後
 
