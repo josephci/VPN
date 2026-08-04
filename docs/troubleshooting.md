@@ -67,6 +67,31 @@ sudo apt install -y iptables-persistent
 sudo bash scripts/deploy.sh          # 會重新加規則並持久化
 ```
 
+### 客戶端 `EOF`＋伺服器 `processed invalid connection`，連 loopback 都失敗
+
+如果 `selftest.sh` 顯示連伺服器自己都認證唔到自己（`open connection ... EOF`，3–6ms 即斷），而 `verify-reality.sh` 又話所有參數一致，最大機會係 **IPv6**。
+
+REALITY 伺服器**每收到一個連線，都要即場撥去偽裝目標**（預設 `www.microsoft.com:443`）轉發 TLS 握手。**Oracle VCN 預設冇開 IPv6** —— 如果 DNS 解析到 AAAA 記錄就去撥 IPv6，撥唔通，握手完成唔到，連線即刻關。客戶端見 `EOF`，伺服器記 `processed invalid connection`。
+
+確認方法：
+
+```bash
+getent ahosts www.microsoft.com | head -6      # 見到一堆 2600:... 就有 IPv6 記錄
+curl -4 -sI --max-time 8 https://www.microsoft.com | head -1   # IPv4 通唔通
+curl -6 -sI --max-time 8 https://www.microsoft.com | head -1   # IPv6 通唔通（多數失敗）
+```
+
+修正：config 加 `"dns": { "servers": [{"type":"local"}], "strategy": "ipv4_only" }`。
+最簡單就係重新跑一次部署 —— **會沿用現有金鑰，客戶端唔使重新匯入**：
+
+```bash
+cd ~/vpn && git pull
+sudo bash scripts/deploy.sh
+sudo bash scripts/selftest.sh
+```
+
+> ⚠️ 舊版 sing-box 教學會叫你喺 `reality.handshake` 入面加 `domain_strategy` —— **喺 1.12 之後已棄用**，1.14 會移除，加咗會令 sing-box 直頭起唔到。要用上面嘅 `dns.strategy`。
+
 ### `REALITY: processed invalid connection`（伺服器 log）
 
 症狀通常係：**端口探測通到**（`TcpTestSucceeded: True`）、**客戶端顯示「已連線」但上唔到網**、測延遲出 `-1 ms`。

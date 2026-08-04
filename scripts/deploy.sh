@@ -163,6 +163,10 @@ info "寫 $CONF …"
 cat >"$CONF" <<EOF
 {
   "log": { "level": "warn", "timestamp": true },
+  "dns": {
+    "servers": [ { "type": "local", "tag": "local" } ],
+    "strategy": "ipv4_only"
+  },
   "inbounds": [
     {
       "type": "vless",
