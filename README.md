@@ -183,6 +183,7 @@ cat ~/.ssh/oracle_vpn.pub
 | **Name** | 隨便，例如 `proxy` |
 | **Image** | 撳 `Change image` → **Canonical Ubuntu 24.04**（唔好用 Oracle Linux，麻煩好多） |
 | **Shape** | 撳 `Change shape` → `Ampere` → **`VM.Standard.A1.Flex`**（要見到 `Always Free-eligible` 標籤）→ **預設 1 核 / 6 GB 就得，唔使改** |
+| | ⚠️ **開機前一定要親眼見到 `Always Free-eligible` 標籤。冇呢個標籤 = 收費。** Oracle 將免費同收費 shape 溝埋一齊放，名又似（`E5.Flex` vs `E2.1.Micro`），好易撳錯。 |
 | **Primary network** | 揀 `Select existing virtual cloud network` → **`vcn-proxy`**（3a 整嗰個） |
 | **Subnet** | 揀 `Select existing subnet` → **`Public Subnet-vcn-proxy`**（一定要 **Public** 開頭嗰個） |
 | **Public IPv4 address** | ✅ **一定要開 `Automatically assign public IPv4 address`** |
@@ -230,7 +231,10 @@ Create the instance in a different availability domain or try again later.
 
 **① 改開 AMD 免費機（最快，想即刻用得到就揀呢個）**
 
-Shape → **`AMD`** 分頁 → **`VM.Standard.E2.1.Micro`**
+Shape → **`Specialty and previous generation`** 分頁 → **`VM.Standard.E2.1.Micro`**
+
+> 🔴 **唔喺 `AMD` 分頁！** `AMD` 分頁入面得 `VM.Standard.E5.Flex`，嗰個係**收費** shape。
+> 免費嘅 `E2.1.Micro` 收埋喺 **`Specialty and previous generation`** 度 —— 佢個描述第一個字就係 "Always Free"。
 
 | | |
 |---|---|
