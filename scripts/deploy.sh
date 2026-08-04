@@ -22,6 +22,9 @@ HY2_PORT=8443
 REALITY_SNI=www.microsoft.com    # REALITY 借用嘅真實網站
 HY2_SNI=www.bing.com             # Hysteria2 自簽憑證嘅 CN
 ADDRESS=""
+REALITY_SNI_SET=""
+REALITY_PORT_SET=""
+HY2_PORT_SET=""
 DO_UPDATE=0
 DO_KEEPALIVE=0
 
@@ -37,9 +40,9 @@ while [[ $# -gt 0 ]]; do
     --address)      ADDRESS="${2:?--address 要跟住一個 IP 或域名}"; shift 2 ;;
     --update)       DO_UPDATE=1; shift ;;
     --keepalive)    DO_KEEPALIVE=1; shift ;;
-    --reality-sni)  REALITY_SNI="${2:?}"; shift 2 ;;
-    --port)         REALITY_PORT="${2:?}"; shift 2 ;;
-    --hy2-port)     HY2_PORT="${2:?}"; shift 2 ;;
+    --reality-sni)  REALITY_SNI="${2:?}"; REALITY_SNI_SET=1; shift 2 ;;
+    --port)         REALITY_PORT="${2:?}"; REALITY_PORT_SET=1; shift 2 ;;
+    --hy2-port)     HY2_PORT="${2:?}"; HY2_PORT_SET=1; shift 2 ;;
     -h|--help)      sed -n '2,14p' "$0"; exit 0 ;;
     *)              die "唔認得嘅參數：$1（用 --help 睇用法）" ;;
   esac
@@ -103,9 +106,18 @@ resolve_sb
 # ---------------------------------------------------------------- 生成 / 沿用金鑰
 mkdir -p "$CONF_DIR"
 
+# 記低command line明確指定咗嘅值 —— source params.env 會覆蓋佢哋，之後要還原
+CLI_SNI="${REALITY_SNI_SET:+$REALITY_SNI}"
+CLI_PORT="${REALITY_PORT_SET:+$REALITY_PORT}"
+CLI_HY2PORT="${HY2_PORT_SET:+$HY2_PORT}"
+
 if [[ -f $PARAMS ]]; then
   # shellcheck disable=SC1090
   source "$PARAMS"
+  # command line 優先於存檔嘅值
+  [[ -n "$CLI_SNI" ]]     && REALITY_SNI="$CLI_SNI"
+  [[ -n "$CLI_PORT" ]]    && REALITY_PORT="$CLI_PORT"
+  [[ -n "$CLI_HY2PORT" ]] && HY2_PORT="$CLI_HY2PORT"
   ok "沿用現有金鑰（$PARAMS）— 客戶端唔使重新設定"
 else
   [[ $DO_UPDATE -eq 1 ]] && warn "搵唔到舊參數，改為全新部署"
