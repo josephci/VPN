@@ -61,6 +61,15 @@ fi
 # ══════════════════════════════════════════════ 伺服器模式：自檢
 echo "${BLD}伺服器自檢${RST}"
 
+IS_ROOT=0
+[[ $EUID -eq 0 ]] && IS_ROOT=1
+if [[ $IS_ROOT -eq 0 ]]; then
+  echo
+  echo "${YEL}${BLD} ⚠ 冇 root 權限 —— config 同防火牆呢兩項檢查會跳過。${RST}"
+  echo "${YEL}   （config.json 係 600 root-only、iptables 亦要 root，唔加 sudo 會report假失敗）${RST}"
+  echo "${YEL}   完整檢查請行：${CYA}sudo bash $0${RST}"
+fi
+
 head_ "系統"
 echo "  $(. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME" || uname -s)"
 echo "  架構：$(uname -m)    核心：$(uname -r)"
@@ -76,14 +85,14 @@ head_ "sing-box"
 if command -v sing-box >/dev/null || [[ -x /usr/local/bin/sing-box ]]; then
   sb=$(command -v sing-box || echo /usr/local/bin/sing-box)
   pass "$($sb version | head -1)"
-  if [[ -f /etc/sing-box/config.json ]]; then
-    if $sb check -c /etc/sing-box/config.json 2>/dev/null; then
-      pass "config.json 驗證通過"
-    else
-      fail "config.json 驗證失敗"
-    fi
-  else
+  if [[ ! -f /etc/sing-box/config.json ]]; then
     warn "未有 config.json — 行 deploy.sh"
+  elif [[ ! -r /etc/sing-box/config.json ]]; then
+    warn "config.json 讀唔到（600 root-only）— 跳過驗證，請用 sudo 重跑"
+  else
+    err=$($sb check -c /etc/sing-box/config.json 2>&1) \
+      && pass "config.json 驗證通過" \
+      || { fail "config.json 驗證失敗"; echo "    $err"; }
   fi
   if systemctl is-active --quiet sing-box 2>/dev/null; then
     pass "systemd service running（已跑 $(systemctl show -p ActiveEnterTimestamp --value sing-box 2>/dev/null | cut -d' ' -f2-3)）"
@@ -105,7 +114,9 @@ else
 fi
 
 head_ "本機防火牆 (iptables)"
-if command -v iptables >/dev/null; then
+if [[ $IS_ROOT -eq 0 ]]; then
+  warn "要 root 先查到 — 跳過。用 ${CYA}sudo bash $0${RST}${YEL} 重跑${RST}"
+elif command -v iptables >/dev/null; then
   iptables -C INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null \
     && pass "443/tcp 已放行" || fail "443/tcp 未放行 — 行 deploy.sh 會自動加"
   iptables -C INPUT -p udp --dport 8443 -j ACCEPT 2>/dev/null \
@@ -119,8 +130,9 @@ else
 fi
 
 head_ "雲端防火牆"
-warn "呢層檢查唔到 — 一定要自己入 Oracle Console 確認"
-echo "    Networking → VCN → Subnet → Security List → Ingress Rules"
+warn "呢層喺機入面檢查唔到 — 要自己入供應商控制台確認"
+echo "    Oracle：Networking → VCN → Subnet → Security List → Ingress Rules"
+echo "    Vultr ：Products → Firewall（冇綁 Firewall Group 就唔使理）"
 echo "    需要：TCP 443（Source 0.0.0.0/0）+ UDP 8443（Source 0.0.0.0/0）"
 
 head_ "BBR"

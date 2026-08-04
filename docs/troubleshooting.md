@@ -3,12 +3,14 @@
 先跑自檢，八成問題佢會直接指出嚟：
 
 ```bash
-# 喺伺服器上
-bash scripts/check-env.sh
+# 喺伺服器上 —— 一定要加 sudo
+sudo bash scripts/check-env.sh
 
-# 喺澳門／香港（由外面探測）
+# 喺澳門／香港（由外面探測，唔使 sudo）
 bash scripts/check-env.sh 你嘅IP
 ```
+
+> ⚠️ 伺服器自檢**冇 sudo 會查唔到 config 同防火牆** —— `config.json` 係 600 root-only，`iptables` 亦要 root。腳本會提你，唔會再報假失敗。
 
 ---
 
