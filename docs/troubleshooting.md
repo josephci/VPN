@@ -67,6 +67,25 @@ sudo apt install -y iptables-persistent
 sudo bash scripts/deploy.sh          # 會重新加規則並持久化
 ```
 
+### `REALITY: processed invalid connection`（伺服器 log）
+
+症狀通常係：**端口探測通到**（`TcpTestSucceeded: True`）、**客戶端顯示「已連線」但上唔到網**、測延遲出 `-1 ms`。
+
+呢個錯代表客戶端 ClientHello 入面嘅 REALITY 認證過唔到 —— 伺服器當你係掃描器，直接將你轉去真嘅偽裝網站。**九成係公鑰 (pbk) 或者 short_id (sid) 對唔上。**
+
+用呢個工具查，佢會**由伺服器真正跑緊嗰份 `config.json` 反推正確公鑰**，唔倚賴 `params.env`：
+
+```bash
+sudo bash scripts/verify-reality.sh          # 比對 + 印正確連結
+sudo bash scripts/verify-reality.sh --fix    # 順手修正 params.env
+```
+
+輸出最底嗰條連結係**以 config.json 為準**，一定啱。
+
+> ⚠️ 匯入新連結之前，**先喺客戶端刪曬舊節點**。好多人重新匯入之後仲係撳返舊嗰個，白查一餐。
+
+log 入面來自陌生 IP 嘅同類錯誤（一堆唔同 IP、一秒幾條）係互聯網掃描器，**唔關你事** —— 正好證明 REALITY 偽裝生效緊。睇你自己個出口 IP 嗰幾條就得。
+
 ### 客戶端顯示「握手失敗 / TLS handshake error」
 
 REALITY 參數對唔上。**逐個字對**：

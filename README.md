@@ -473,6 +473,7 @@ scripts/
   deploy.sh          一鍵部署（裝 sing-box + 生成 config + systemd + 防火牆 + BBR）
   show-links.sh      重新印分享連結同 QR code
   check-env.sh       部署前後嘅環境自檢（伺服器上要 sudo；由外面探測就唔使）
+  verify-reality.sh  由 config.json 反推正確公鑰同連結（查 "invalid connection"）
 docs/
   clients.md         各平台客戶端設定
   troubleshooting.md 排錯
