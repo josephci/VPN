@@ -19,7 +19,9 @@ FALLBACK_VERSION=1.12.0          # GitHub API 攞唔到版本時用呢個
 
 REALITY_PORT=443
 HY2_PORT=8443
-REALITY_SNI=www.microsoft.com    # REALITY 借用嘅真實網站
+REALITY_SNI=www.apple.com        # REALITY 借用嘅真實網站
+                                 # 唔好用 www.microsoft.com —— 佢喺 Akamai 上，
+                                 # 部分邊緣節點嘅 TLS 行為令 REALITY 握手必定失敗
 HY2_SNI=www.bing.com             # Hysteria2 自簽憑證嘅 CN
 ADDRESS=""
 REALITY_SNI_SET=""

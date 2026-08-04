@@ -87,9 +87,11 @@ sudo sing-box check -c /etc/sing-box/config.json && sudo systemctl restart sing-
 
 ## 換 REALITY 偽裝目標
 
-如果覺得 `www.microsoft.com` 太多人用，可以換。**條件**：目標站要支援 TLS 1.3 + H2、喺內地連得到、而且唔係你自己嘅站。
+**條件**：目標站要支援 TLS 1.3 + H2、喺內地連得到、而且唔係你自己嘅站。
 
-常用選擇：`www.apple.com`、`www.amazon.com`、`www.cloudflare.com`、`dl.google.com`
+常用選擇：`www.apple.com`（預設）、`dl.google.com`、`www.cloudflare.com`、`addons.mozilla.org`
+
+> 🔴 **唔好用 `www.microsoft.com`。** 佢喺 Akamai CDN 上，唔同邊緣節點嘅 TLS 行為唔一致，某啲節點會令 REALITY 握手**必定失敗**（伺服器 log 會不停出 `processed invalid connection`，連 loopback 都連唔到）。同一份 config 換個機房就可能一個通一個唔通，極難查。
 
 ```bash
 sudo bash scripts/deploy.sh --reality-sni www.apple.com

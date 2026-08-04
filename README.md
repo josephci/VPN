@@ -376,7 +376,7 @@ sudo bash scripts/deploy.sh
   VLESS-REALITY（主力）
 ────────────────────────────────────────────
 vless://xxxxxxxx-xxxx-...@168.138.xx.xx:443?encryption=none&flow=xtls-rprx-vision
-&security=reality&sni=www.microsoft.com&fp=chrome&pbk=YJ2Ih...&sid=472c32...&type=tcp#Oracle-REALITY
+&security=reality&sni=www.apple.com&fp=chrome&pbk=YJ2Ih...&sid=472c32...&type=tcp#Oracle-REALITY
 
   [QR code]
 
@@ -397,7 +397,7 @@ sudo bash scripts/show-links.sh
 
 ### 呢兩個協議做緊乜
 
-**VLESS-REALITY（主力）** — REALITY 唔使你買域名同憑證。佢握手嗰陣直接向真實嘅 `www.microsoft.com` 攞真憑證轉發俾你，所以 GFW 主動探測你個 443 端口嗰陣，見到嘅係一個貨真價實嘅微軟 TLS 站，驗證憑證鏈都過到。呢個由 2024 年起一直係內地抗封嘅事實標準。
+**VLESS-REALITY（主力）** — REALITY 唔使你買域名同憑證。佢握手嗰陣直接向真實嘅 `www.apple.com` 攞真憑證轉發俾你，所以 GFW 主動探測你個 443 端口嗰陣，見到嘅係一個貨真價實嘅蘋果 TLS 站，驗證憑證鏈都過到。呢個由 2024 年起一直係內地抗封嘅事實標準。
 
 **Hysteria2（備用）** — 基於改造版 QUIC，用 Salamander 混淆扮成 Chrome 上 Google 嘅正常 QUIC 流量。內地跨境線路夜晚丟包好嚴重，Hysteria2 有自己嘅擁塞控制，**喺丟包環境下反而比 TCP 類快好多**。REALITY 死咗就切呢個。
 

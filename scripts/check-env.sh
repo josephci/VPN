@@ -35,11 +35,11 @@ if [[ -n "$REMOTE" ]]; then
   head_ "TLS 握手 — REALITY 偽裝檢查"
   if command -v openssl >/dev/null; then
     cn=$(timeout 8 openssl s_client -connect "${REMOTE}:443" \
-          -servername www.microsoft.com </dev/null 2>/dev/null \
+          -servername www.apple.com </dev/null 2>/dev/null \
           | openssl x509 -noout -subject 2>/dev/null || true)
     if [[ -n "$cn" ]]; then
       pass "握手成功，憑證主體：${cn#subject=}"
-      echo "    （見到 microsoft.com 就啱曬 — 呢個就係 REALITY 借憑證嘅效果）"
+      echo "    （見到偽裝目標嘅憑證就啱曬 — 呢個就係 REALITY 借憑證嘅效果）"
     else
       fail "TLS 握手失敗 — 端口通但 sing-box 可能未行"
     fi

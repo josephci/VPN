@@ -67,30 +67,30 @@ sudo apt install -y iptables-persistent
 sudo bash scripts/deploy.sh          # 會重新加規則並持久化
 ```
 
-### 客戶端 `EOF`＋伺服器 `processed invalid connection`，連 loopback 都失敗
+### 🔴 客戶端 `EOF`＋伺服器 `processed invalid connection`，連 loopback 都失敗
 
-如果 `selftest.sh` 顯示連伺服器自己都認證唔到自己（`open connection ... EOF`，3–6ms 即斷），而 `verify-reality.sh` 又話所有參數一致，最大機會係 **IPv6**。
+**症狀**：`selftest.sh` 顯示連伺服器自己都認證唔到自己（`open connection ... EOF`，3–6ms 即斷），但 `verify-reality.sh` 話所有參數一致、私鑰乾淨、只有一個 sing-box process。
 
-REALITY 伺服器**每收到一個連線，都要即場撥去偽裝目標**（預設 `www.microsoft.com:443`）轉發 TLS 握手。**Oracle VCN 預設冇開 IPv6** —— 如果 DNS 解析到 AAAA 記錄就去撥 IPv6，撥唔通，握手完成唔到，連線即刻關。客戶端見 `EOF`，伺服器記 `processed invalid connection`。
+**病因：偽裝目標唔啱用。**
 
-確認方法：
+REALITY 每收到一個連線，都要即場撥去偽裝目標借真實 TLS 握手。**如果嗰個目標返嘅握手唔符合 REALITY 要求（TLS 1.3 + H2、行為一致），認證就必定失敗** —— 而錯誤訊息會誤導你以為係金鑰問題。
 
-```bash
-getent ahosts www.microsoft.com | head -6      # 見到一堆 2600:... 就有 IPv6 記錄
-curl -4 -sI --max-time 8 https://www.microsoft.com | head -1   # IPv4 通唔通
-curl -6 -sI --max-time 8 https://www.microsoft.com | head -1   # IPv6 通唔通（多數失敗）
-```
+**`www.microsoft.com` 就係一個壞例子**：佢喺 Akamai CDN 上，唔同邊緣節點行為唔一致，某啲節點會令 REALITY 完全用唔到。**同一份 config 換個機房就可能一個通一個唔通**，所以特別難查。
 
-修正：config 加 `"dns": { "servers": [{"type":"local"}], "strategy": "ipv4_only" }`。
-最簡單就係重新跑一次部署 —— **會沿用現有金鑰，客戶端唔使重新匯入**：
+**修正 —— 換偽裝目標：**
 
 ```bash
-cd ~/vpn && git pull
-sudo bash scripts/deploy.sh
+sudo bash scripts/deploy.sh --reality-sni www.apple.com
 sudo bash scripts/selftest.sh
 ```
 
-> ⚠️ 舊版 sing-box 教學會叫你喺 `reality.handshake` 入面加 `domain_strategy` —— **喺 1.12 之後已棄用**，1.14 會移除，加咗會令 sing-box 直頭起唔到。要用上面嘅 `dns.strategy`。
+見到 **✅ 伺服器 100% 正常** 就係搞掂。仲唔得就試 `dl.google.com`、`www.cloudflare.com`、`addons.mozilla.org`。
+
+> ⚠️ **SNI 改咗，客戶端一定要重新匯入連結**（`sudo bash scripts/show-links.sh`）。金鑰冇變，但 `sni=` 參數變咗。
+
+> 💡 順帶一提：`dns.strategy = ipv4_only`（deploy.sh 已預設）可以避免另一個相似問題 —— Oracle VCN 預設冇 IPv6，如果解析到 AAAA 就去撥會撥唔通。
+>
+> 舊教學會叫你喺 `reality.handshake` 加 `domain_strategy` —— **1.12 起已棄用**，1.13 加咗會令 sing-box 直頭起唔到，要用 `dns.strategy`。
 
 ### `REALITY: processed invalid connection`（伺服器 log）
 
@@ -124,7 +124,7 @@ sudo bash scripts/show-links.sh
 另外確認客戶端嘅：
 - `flow` = `xtls-rprx-vision`
 - `fp`（指紋）= `chrome`
-- `sni` = `www.microsoft.com`（同伺服器 config 一致）
+- `sni` 同伺服器 config 嘅 `server_name` 一致（預設 `www.apple.com`）
 
 ### Hysteria2 顯示憑證錯誤
 
@@ -139,7 +139,7 @@ sudo bash scripts/show-links.sh
 | **協議被識別** | GFW 認出流量特徵係代理 | 換幾多次 IP 都一樣死 | 換協議（REALITY / Hysteria2 已經係最強嗰批）|
 | **IP 被封** | 淨係封你個 IP，唔理協議 | **換 IP 即刻復活** | 見下面 |
 
-用緊 REALITY 嘅話，第一種好難發生 —— GFW 主動探測你個 443 port 會見到一個真嘅微軟 TLS 站，連憑證鏈都驗得過。所以**九成係第二種**。
+用緊 REALITY 嘅話，第一種好難發生 —— GFW 主動探測你個 443 port 會見到一個真實網站嘅 TLS 回應，連憑證鏈都驗得過。所以**九成係第二種**。
 
 IP 被封又分兩類：
 - **針對性封鎖** — 探測到你係代理先封。REALITY 令呢個好難發生。
