@@ -32,6 +32,7 @@
 - [`docs/maintenance.md`](docs/maintenance.md) — 換 IP、加用戶、更新、備份
 - [`docs/faq.md`](docs/faq.md) — 費用、安全、點測內地通唔通、**點解普通 VPN 唔得**、REALITY 原理
 - [`docs/emergency.md`](docs/emergency.md) — 🚨 **人喺內地、得部手機、連唔到** —— 純手機換 IP（建議 screenshot 低）
+- [`docs/router.md`](docs/router.md) — OpenWrt 旁路由 + 雙 SSID，俾屋企人用（唔使裝 app）
 
 ---
 
@@ -473,6 +474,7 @@ sudo bash scripts/deploy.sh --keepalive
 ```
 scripts/
   deploy.sh          一鍵部署（裝 sing-box + 生成 config + systemd + 防火牆 + BBR）
+  gen-client.sh      生成 OpenWrt 旁路由用嘅 client config + 分流規則檔
   show-links.sh      重新印分享連結同 QR code
   check-env.sh       部署前後嘅環境自檢（伺服器上要 sudo；由外面探測就唔使）
   verify-reality.sh  由 config.json 反推正確公鑰同連結（查 "invalid connection"）
@@ -482,6 +484,7 @@ docs/
   maintenance.md     換 IP、加用戶、更新、備份
   faq.md             費用、安全、內地測試、備援、原理
   emergency.md       應急卡：純手機換 IP
+  router.md          OpenWrt 旁路由 + 雙 SSID
 ```
 
 腳本喺 **sing-box 1.12.0** 上驗證過（`sing-box check` 通過 + 實際啟動成功），ARM64 同 x86_64 都支援。
