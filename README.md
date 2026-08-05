@@ -30,7 +30,7 @@
 - [`docs/clients.md`](docs/clients.md) — 各平台客戶端逐步設定
 - [`docs/troubleshooting.md`](docs/troubleshooting.md) — 排錯（連唔到／被封／速度慢）
 - [`docs/maintenance.md`](docs/maintenance.md) — 換 IP、加用戶、更新、備份
-- [`docs/faq.md`](docs/faq.md) — 會唔會爆錢、安唔安全、點測內地通唔通、兩個都唔得點算、REALITY 原理
+- [`docs/faq.md`](docs/faq.md) — 費用、安全、點測內地通唔通、**點解普通 VPN 唔得**、REALITY 原理
 - [`docs/emergency.md`](docs/emergency.md) — 🚨 **人喺內地、得部手機、連唔到** —— 純手機換 IP（建議 screenshot 低）
 
 ---
