@@ -31,6 +31,7 @@
 - [`docs/troubleshooting.md`](docs/troubleshooting.md) — 排錯（連唔到／被封／速度慢）
 - [`docs/maintenance.md`](docs/maintenance.md) — 換 IP、加用戶、更新、備份
 - [`docs/faq.md`](docs/faq.md) — 會唔會爆錢、安唔安全、點測內地通唔通、兩個都唔得點算、REALITY 原理
+- [`docs/emergency.md`](docs/emergency.md) — 🚨 **人喺內地、得部手機、連唔到** —— 純手機換 IP（建議 screenshot 低）
 
 ---
 
@@ -480,6 +481,7 @@ docs/
   troubleshooting.md 排錯
   maintenance.md     換 IP、加用戶、更新、備份
   faq.md             費用、安全、內地測試、備援、原理
+  emergency.md       應急卡：純手機換 IP
 ```
 
 腳本喺 **sing-box 1.12.0** 上驗證過（`sing-box check` 通過 + 實際啟動成功），ARM64 同 x86_64 都支援。
