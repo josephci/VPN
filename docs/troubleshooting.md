@@ -126,6 +126,35 @@ sudo bash scripts/show-links.sh
 - `fp`（指紋）= `chrome`
 - `sni` 同伺服器 config 嘅 `server_name` 一致（預設 `www.apple.com`）
 
+### 手機開熱點俾電腦用，電腦上唔到外網（電話自己就上到）
+
+**唔係部電腦俾人改咗。** 手機熱點分享出去嘅流量，唔會經過手機上面個代理：
+
+- **iOS**：個人熱點流量係**明確被排除喺 VPN 之外**嘅，Apple 設計如此
+- **Android**：大部分情況下 VpnService 都唔覆蓋 tethering 流量
+
+```
+電話自己上網  → 經代理 → ✅
+電腦經熱點    → 唔經代理 → 裸流量撞正 GFW → ❌
+```
+
+**驗證**：喺部電腦開 https://ip.sb —— 顯示內地 IP 就證實咗，代理根本冇覆蓋部電腦。
+
+**解決**：喺部電腦自己裝客戶端（v2rayN）。熱點只負責俾網絡，代理要部電腦自己行。
+
+### Windows 系統代理殘留（乜都上唔到）
+
+v2rayN 設咗系統代理之後被閂咗、但代理設定冇清 → 成部電腦上唔到網，瀏覽器出 `ERR_PROXY_CONNECTION_FAILED`。
+
+```powershell
+netsh winhttp show proxy
+reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable
+```
+
+`ProxyEnable = 1` 但 v2rayN 冇行 → 就係殘留。修法：重開 v2rayN 然後托盤右鍵 → `系統代理` → `清除系統代理`；或者 `設定` → `網路和網際網路` → `Proxy` → 熄咗「使用 Proxy 伺服器」。
+
+> ⚠️ **唔好喺公司／學校電腦或者網絡用。** 嗰啲環境可能有 MDM 或端點監控，IT 睇得到你裝咗咩、連緊邊 —— 呢種被發現嘅機會，比俾 GFW 捉到高好多。呢個係僱傭／校規風險，唔係法律風險。
+
 ### Hysteria2 顯示憑證錯誤
 
 腳本用嘅係**自簽憑證**，所以客戶端一定要開 **`跳過憑證驗證` / `insecure` / `允許不安全`**。分享連結入面嘅 `insecure=1` 已經帶咗，但有啲客戶端要手動剔。
