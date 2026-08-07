@@ -8,11 +8,45 @@
 
 ---
 
+## 先搞清楚：你需要嘅係「代理客戶端」，唔係 VPN app
+
+**OpenVPN、WireGuard 呢啲 app 用唔到** —— 唔係佢哋唔好，係**佢哋只識講自己嗰種協議**，唔識 VLESS-REALITY 同 Hysteria2。就好似 DVD 機播唔到藍光碟。
+
+（而且就算你真係喺伺服器開返個 OpenVPN，喺內地一樣會俾 GFW 殺 —— 見 [`faq.md`](faq.md#點解普通-vpnipsec--wireguard--pptp喺內地唔得)。）
+
+另外值得知嘅分別：
+
+| | **VPN**（OpenVPN / WireGuard）| **代理**（VLESS / Hysteria2）|
+|---|---|---|
+| 層次 | 網絡層（L3），建虛擬網卡 | 應用層（L7），逐個連線轉發 |
+| 流量 | **全部**入隧道 | **逐條連線**決定走邊 |
+| 分流 | 粗糙 | 精細（域名 / IP / GeoIP / 按 app）|
+
+分流唔止令你上淘寶微信快同慳流量，仲**大幅降低流量特徵** —— 只有真正需要嘅流量先經隧道。
+
+---
+
 ## iOS
 
-### Shadowrocket（最推薦）
+> iOS 上要接管系統流量必須用 Apple 嘅 **NetworkExtension** 框架，需要付費開發者帳號同權限審批 —— 所以 iOS 嘅選擇比 Android 少，而且多數收費。**但有免費嘅。**
 
-US$2.99，**要非中國區嘅 Apple ID**（中國區 App Store 已經落架）。冇非中國區 ID 嘅話，去 https://appleid.apple.com 開個新嘅，地區揀香港／美國，用禮品卡充值即可。
+### sing-box（免費，推薦先試呢個）
+
+App Store 搜 `sing-box`，官方出品，**完全免費**。佢就係你部伺服器上跑緊嗰個 sing-box 嘅 iOS 版，**同源同宗，兼容性最好**。
+
+撳 `+` → `Import from clipboard`（先複製連結）或者掃碼。
+
+> 同樣要**非中國區 Apple ID** —— 呢點所有選擇都一樣，唔係 Shadowrocket 獨有。
+
+### Karing（免費）
+
+介面友善啲，都係免費。
+
+### Shadowrocket（約 US$2.99）
+
+**唔係必需**，但佢嘅**規則系統最強、教學資源最多**，遇到問題最易搵到答案。一次性收費，唔係訂閱。
+
+要非中國區 Apple ID（中國區 App Store 已落架）。冇嘅話去 https://appleid.apple.com 開個新嘅，地區揀香港／美國，用禮品卡充值。
 
 1. 開 Shadowrocket → 右上角 `+`
 2. 撳右上角掃碼圖示 → 掃 REALITY 嗰個 QR code
@@ -22,9 +56,7 @@ US$2.99，**要非中國區嘅 Apple ID**（中國區 App Store 已經落架）�
 
 **建議設定**：`設定` → `全域路由` 揀 **`配置`**（唔好揀「代理」），咁內地網站行直連、外網先走代理，快好多又慳流量。
 
-### sing-box（免費）
-
-App Store 搜 `sing-box`，官方出品，免費。撳 `+` → `Import from clipboard`（先複製連結）或掃碼。
+> 💡 **Android 冇呢個問題** —— NekoBox、sing-box 都係免費開源，GitHub 下 APK 就得。
 
 ---
 
