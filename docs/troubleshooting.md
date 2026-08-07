@@ -142,6 +142,51 @@ sudo bash scripts/show-links.sh
 
 **解決**：喺部電腦自己裝客戶端（v2rayN）。熱點只負責俾網絡，代理要部電腦自己行。
 
+### 🔴 人喺內地，部電腦落唔到客戶端（雞同蛋問題）
+
+要有代理先落到代理。四條路，**第一條唔使落載任何嘢**。
+
+**方法 1：叫手機做區域網代理（Android 最直接）**
+
+手機已經連得通，開放俾區域網用就得：
+
+1. v2rayNG / NekoBox → `設定` → **`允許來自區域網路嘅連線`** → 開啟
+2. 記低 HTTP 端口（v2rayNG 預設 `10809`，NekoBox 混合 `2080`）
+3. 手機喺熱點嘅 IP 通常係 `192.168.43.1` 或 `172.20.10.1`
+
+電腦：`設定` → `網路和網際網路` → `Proxy` → `手動設定` → 填手機 IP + 端口。
+
+> iOS 嘅 Shadowrocket 未必有呢個功能，唔得就行方法 2。
+
+**方法 2：經自己部伺服器中轉（最可靠，唔經第三方）**
+
+Windows 內置 OpenSSH，SSH 去外國 IP 通常唔被封。
+
+```powershell
+ssh -i "$env:USERPROFILE\.ssh\oracle_vpn" ubuntu@伺服器IP
+```
+
+```bash
+wget https://github.com/2dust/v2rayN/releases/latest/download/v2rayN-windows-64.zip
+exit
+```
+
+```powershell
+scp -i "$env:USERPROFILE\.ssh\oracle_vpn" ubuntu@伺服器IP:~/v2rayN-windows-64.zip .
+```
+
+同一招可以攞任何檔案。
+
+**方法 3：Oracle Cloud Shell**
+
+`cloud.oracle.com` 喺內地通常上到。開 `>_` → `wget` 個檔 → Cloud Shell 選單嘅 **Download** 拉落 PC。
+
+**方法 4：微信「文件傳輸助手」**
+
+手機（有代理）落載好 → 分享去文件傳輸助手 → 電腦版微信收。微信喺內地正常運作，最唔起眼。
+
+> 🔴 **唔好用內地鏡像站／網盤落載客戶端。** 呢個領域係植入後門嘅重災區 —— 改過嘅客戶端會偷你嘅節點資料、甚至將流量鏡像出去。**只由官方 GitHub 落載。**
+
 ### Windows 系統代理殘留（乜都上唔到）
 
 v2rayN 設咗系統代理之後被閂咗、但代理設定冇清 → 成部電腦上唔到網，瀏覽器出 `ERR_PROXY_CONNECTION_FAILED`。
