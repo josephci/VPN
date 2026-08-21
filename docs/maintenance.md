@@ -114,6 +114,25 @@ sudo bash scripts/deploy.sh --port 8443 --hy2-port 20443
 
 ## 監控
 
+### 自動健康檢查（建議裝）
+
+```bash
+sudo bash scripts/healthcheck.sh --install
+```
+
+每 10 分鐘自動檢查一次：服務、config、端口、REALITY 握手目標、**真隧道實測**、磁碟同記憶體。**發現隧道斷咗會自動重啟 sing-box**，恢復到就靜靜哋記低，恢復唔到先叫。
+
+```bash
+sudo singbox-health --status                  # 最近一次結果
+journalctl -t singbox-health --since today    # 歷史
+sudo bash scripts/healthcheck.sh              # 即時跑一次，睇齊全報告
+sudo bash scripts/healthcheck.sh --uninstall  # 唔要
+```
+
+> ⚠️ **佢證明唔到「內地連唔連得到」** —— 佢喺伺服器上面跑，測唔到 GFW 有冇封你個 IP。嗰樣要用 **itdog.cn** 由內地節點測（見 [`faq.md`](faq.md)）。
+
+### 手動查
+
 ```bash
 systemctl status sing-box                    # 服務狀態
 journalctl -u sing-box --since today         # 今日 log

@@ -474,6 +474,7 @@ sudo bash scripts/deploy.sh --keepalive
 ```
 scripts/
   deploy.sh          一鍵部署（裝 sing-box + 生成 config + systemd + 防火牆 + BBR）
+  healthcheck.sh     定期自動健康檢查 + 自我修復（--install 裝 systemd timer）
   gen-client.sh      生成 OpenWrt 旁路由用嘅 client config + 分流規則檔
   show-links.sh      重新印分享連結同 QR code
   check-env.sh       部署前後嘅環境自檢（伺服器上要 sudo；由外面探測就唔使）
